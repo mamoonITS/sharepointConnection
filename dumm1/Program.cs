@@ -3,18 +3,14 @@ using dumm1.auth;
 using dumm1.entity;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
-using static dumm1.entity.AppSettings;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
 
 // Add configuration binding
 builder.Services.Configure<AppSettings>(builder.Configuration);
@@ -26,9 +22,10 @@ builder.Services.AddSingleton<TokenCredential>(provider =>
     return new MyTokenCredential(
         config.AzureAd.ClientId,
         config.AzureAd.TenantId,
-        config.AzureAd.Scopes.Split(',', StringSplitOptions.RemoveEmptyEntries));
+        config.AzureAd.Scopes.Split(',', StringSplitOptions.RemoveEmptyEntries),
+        config.AzureAd.ClientSecret
+        );
 });
-
 
 // Register GraphServiceClient
 builder.Services.AddScoped(provider =>
@@ -41,8 +38,6 @@ builder.Services.AddScoped(provider =>
 
 // Register your GraphService
 builder.Services.AddScoped<GraphService>();
-
-
 
 var app = builder.Build();
 

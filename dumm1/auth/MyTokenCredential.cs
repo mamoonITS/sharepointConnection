@@ -9,17 +9,28 @@ namespace dumm1.auth
     public class MyTokenCredential : TokenCredential
     {
         private readonly string[] _scopes;
-        private readonly InteractiveBrowserCredential _credential;
+        private readonly TokenCredential _credential; // Changed to base type
 
-        public MyTokenCredential(string clientId, string tenantId, string[] scopes)
+        public MyTokenCredential(string clientId, string tenantId, string[] scopes, string clientSecret = null)
         {
             _scopes = scopes;
-            _credential = new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions
+            try
             {
-                ClientId = clientId,
-                TenantId = tenantId,
-                RedirectUri = new Uri("http://localhost")
-            });
+                // In MyTokenCredential constructor, modify to:
+                if (!string.IsNullOrEmpty(clientSecret))
+                {
+                    _credential = new ClientSecretCredential(
+                        tenantId,
+                        clientId,
+                        clientSecret,
+                        new TokenCredentialOptions { AuthorityHost = AzureAuthorityHosts.AzurePublicCloud });
+                }
+            
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
@@ -31,11 +42,9 @@ namespace dumm1.auth
         {
             try
             {
-                var token = await _credential.GetTokenAsync(
+                return await _credential.GetTokenAsync(
                     new TokenRequestContext(_scopes),
                     cancellationToken);
-
-                return token;
             }
             catch (AuthenticationFailedException ex)
             {
